@@ -46,16 +46,31 @@ The solution consists of the following Power BI pages:
 ## 🖼️ Dashboard Preview
 
 ### Executive Command Centre
+![Executive Command Centre](./Screenshots/executive-command-centre.png)
 
-![Executive Command Centre](./screenshots/executive-command-centre.png)
+### AI Inventory
+![AI Inventory](./Screenshots/ai-inventory.png)
 
-### AI Risk & Compliance
+### AI Risk
+![AI Risk](./Screenshots/ai-risk.png)
 
-![AI Risk](screenshots/ai-risk.png)
+### Controls & Compliance
+![Controls & Compliance](./Screenshots/controls-compliance.png)
 
-### AI 360° Governance Profile
+### Assessments
+![Assessments](./Screenshots/assessments.png)
 
-![AI 360 Profile](screenshots/ai-360-profile.png)
+### Incidents & Remediation
+![Incidents & Remediation](./Screenshots/incidents-remediation.png)
+
+### AI Lifecycle Monitoring
+![AI Lifecycle Monitoring](./Screenshots/ai-lifecycle-monitoring.png)
+
+### AI 360 Profile – Detail 1
+![AI 360 Profile - Detail 1](./Screenshots/ai-360-profile%20-%20detail%201.png)
+
+### AI 360 Profile – Detail 2
+![AI 360 Profile - Detail 2](./Screenshots/ai-360-profile%20-%20detail%202.png)
 
 ---
 
@@ -97,7 +112,138 @@ The dashboard includes illustrative governance views based on:
 
 ---
 
-## ⚠️ Disclaimer
+# 🏗️ Solution Architecture
+
+```text
+                    AI GOVERNANCE ECOSYSTEM
+                             │
+              ┌──────────────┴──────────────┐
+              │                             │
+        AI INVENTORY                   GOVERNANCE
+              │                             │
+              │                    ┌────────┼─────────┐
+              │                    │        │         │
+              │                  Risk    Controls  Compliance
+              │                    │        │         │
+              └──────────────┬─────┴────────┴─────────┘
+                             │
+                       DATA MODEL
+                             │
+                       POWER QUERY
+                             │
+                            DAX
+                             │
+                       POWER BI
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+           Executive        Risk        Compliance
+          Command Centre   Analytics      Monitoring
+              │              │              │
+              └──────────────┼──────────────┘
+                             │
+                       AI 360° PROFILE
+
+```
+
+---
+
+# 🗂️ Data Model
+
+The solution uses a structured relational data model connecting AI inventory, risks, controls, assessments, incidents, remediation and lifecycle data.
+
+```text
+                         AI GOVERNANCE DATA MODEL
+                                  │
+                                  │
+                         ┌────────▼────────┐
+                         │   AI INVENTORY   │
+                         │──────────────────│
+                         │ AI_ID (PK)       │
+                         │ AI_Name          │
+                         │ AI_Type          │
+                         │ Business_Unit    │
+                         │ Owner_ID (FK)    │
+                         │ Lifecycle_ID(FK) │
+                         │ Risk_Rating      │
+                         │ Status           │
+                         └────────┬─────────┘
+                                  │
+              ┌───────────────────┼────────────────────┐
+              │                   │                    │
+              │                   │                    │
+       ┌──────▼──────┐     ┌──────▼──────┐      ┌──────▼─────────┐
+       │ AI LIFECYCLE│     │  AI RISKS   │      │  ASSESSMENTS   │
+       │─────────────│     │─────────────│      │────────────────│
+       │ Lifecycle_ID│     │ Risk_ID (PK)│      │ Assessment_ID  │
+       │ Stage       │     │ AI_ID (FK)  │      │ AI_ID (FK)     │
+       │ Start_Date  │     │ Likelihood  │      │ Assessment_Type│
+       │ End_Date    │     │ Impact      │      │ Score          │
+       │ Status      │     │ Inherent_Risk│     │ Status         │
+       └─────────────┘     │ Residual_Risk│     │ Assessment_Date│
+                           │ Risk_Status  │      └────────────────┘
+                           └──────┬──────┘
+                                  │
+                         ┌────────▼────────┐
+                         │ RISK TREATMENT  │
+                         │─────────────────│
+                         │ Treatment_ID    │
+                         │ Risk_ID (FK)    │
+                         │ Action          │
+                         │ Owner_ID (FK)   │
+                         │ Due_Date        │
+                         │ Status          │
+                         └────────┬────────┘
+                                  │
+                                  │
+              ┌───────────────────┼────────────────────┐
+              │                   │                    │
+       ┌──────▼──────┐     ┌──────▼───────┐     ┌─────▼──────────┐
+       │  CONTROLS   │     │  INCIDENTS   │     │ REMEDIATION    │
+       │─────────────│     │──────────────│     │────────────────│
+       │ Control_ID  │     │ Incident_ID  │     │ Remediation_ID │
+       │ Control_Name│     │ AI_ID (FK)   │     │ AI_ID (FK)     │
+       │ Control_Type│     │ Severity     │     │ Control_ID(FK) │
+       │ AI_ID (FK)  │     │ Category     │     │ Issue          │
+       │ Effectiveness│    │ Incident_Date│     │ Action         │
+       │ Status      │     │ Status       │     │ Owner_ID (FK)  │
+       └──────┬──────┘     └──────────────┘     │ Due_Date       │
+              │                                  │ Status         │
+              │                                  └────────────────┘
+              │
+       ┌──────▼──────────────┐
+       │ CONTROL ASSESSMENTS  │
+       │──────────────────────│
+       │ Control_Assessment_ID│
+       │ Control_ID (FK)      │
+       │ Assessment_ID (FK)   │
+       │ Test_Result          │
+       │ Effectiveness_Score  │
+       │ Finding              │
+       └──────────────────────┘
+
+
+                    SHARED DIMENSIONS
+                    ──────────────────
+
+       ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+       │    OWNER     │   │ ORGANIZATION │   │     DATE     │
+       │──────────────│   │──────────────│   │──────────────│
+       │ Owner_ID PK  │   │ Org_ID PK    │   │ Date_Key PK  │
+       │ Owner_Name   │   │ Business_Unit│   │ Date         │
+       │ Role         │   │ Department   │   │ Month        │
+       │ Department   │   │ Region       │   │ Quarter      │
+       └──────┬───────┘   └──────┬───────┘   │ Year         │
+              │                  │             └──────┬───────┘
+              │                  │                    │
+              └──────────────────┼────────────────────┘
+                                 │
+                         CONNECTED TO FACTS
+ ```
+
+---
+
+⚠️ Disclaimer
 
 This project uses **synthetic data** and is intended for portfolio, learning and demonstration purposes only.
 
